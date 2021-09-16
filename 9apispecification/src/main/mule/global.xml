@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="7b66d153-f52d-402b-8b7d-4dc0884752c0" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="admin" database="mulesoft_course" />
+	</db:config>
+	<vm:config name="VM_Config" doc:name="VM Config" doc:id="5b805485-afa4-4adb-ad1b-85342d5091a1" >
+		<vm:queues >
+			<vm:queue queueName="artistId.toGet" queueType="PERSISTENT" />
+			<vm:queue queueName="artistInfo.toPost" queueType="PERSISTENT" />
+			<vm:queue queueName="artistId.toDelete" queueType="PERSISTENT" />
+			<vm:queue queueName="artistInfo.toPut" queueType="PERSISTENT" />
+		</vm:queues>
+	</vm:config>
+</mule>

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
+    <http:listener-config name="spotify-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="spotify-config" api="spotify.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <flow name="spotify-main">
+        <http:listener config-ref="spotify-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <logger level="INFO" doc:name="Logger" doc:id="9c495ba7-d9a6-4d8e-b2c0-e354ffc1fcf7" message='#["******************** Log Router !!"]'/>
+		<apikit:router config-ref="spotify-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="spotify-console">
+        <http:listener config-ref="spotify-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <logger level="INFO" doc:name="Logger" doc:id="b9367968-b11d-4979-ba00-6b14370912c9" message='#["******************** Log Console !!"]'/>
+		<apikit:console config-ref="spotify-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="put:\artists\(ID):spotify-config">
+		<set-variable value="#[attributes.uriParams.'ID']" doc:name="Store artistId" doc:id="3db0b0d6-6bb4-4ea3-87a7-4c2aa66cadfb" variableName="artistId" />
+		<set-variable value="#[payload]" doc:name="Store artist info" doc:id="80bf65ea-a153-4fc6-ba10-a584ddb1a56a" variableName="artistObject" />
+		<vm:publish-consume doc:name="Sync: Update artist by ID" doc:id="b3c5620e-4895-4714-a5b5-d949b5f81399" config-ref="VM_Config" queueName="artistInfo.toPut" target="updateResponse">
+			<vm:content ><![CDATA[#[%dw 2.0
+
+output application/json
+---
+{
+	'artistId': vars.artistId,
+	'artistInfo': vars.artistObject
+}]]]></vm:content>
+		</vm:publish-consume>
+		<set-payload value="#[vars.updateResponse]" doc:name="Set output response" doc:id="eab3f60f-5f02-420d-b23e-3a63b3a5a608" />
+    </flow>
+    <flow name="delete:\artists\(ID):spotify-config">
+		<set-variable value="#[attributes.uriParams.'ID']" doc:name="Store artistId" doc:id="b9df06c3-4243-459b-beff-72ef0aed9470" variableName="artistId" />
+		<vm:publish-consume doc:name="Sync: Delete artist info by ID" doc:id="79f985c2-5587-46f6-830f-c855e1b95c50" config-ref="VM_Config" queueName="artistId.toDelete">
+			<vm:content ><![CDATA[#[vars.artistId]]]></vm:content>
+		</vm:publish-consume>
+    </flow>
+    <flow name="get:\artists:spotify-config">
+		<flow-ref doc:name="get all artists" doc:id="6f056d30-deaa-400e-ae94-9c5644ad3d2b" name="getAllArtists"/>
+    </flow>
+    <flow name="get:\artists\(ID):spotify-config">
+		<set-variable value="#[attributes.uriParams.'ID']" doc:name="Store artistId" doc:id="f264e5b7-e1da-410b-a939-792621785614" variableName="artistId"/>
+		<vm:publish-consume queueName="artistId.toGet" doc:name="Sync: Get artist info by ID" doc:id="82f98704-4d4f-43df-8659-cc4b543ab0c7" config-ref="VM_Config">
+			<vm:content ><![CDATA[#[vars.artistId]]]></vm:content>
+		</vm:publish-consume>
+    </flow>
+    <flow name="post:\artists:application\json:spotify-config">
+        <set-variable value="#[payload]" doc:name="Store artist info" doc:id="dfba2fd9-b3bf-4508-8b4a-8d4af8ad5471" variableName="artistObject"/>
+		<vm:publish-consume doc:name="Sync: Create new artist" doc:id="fa21ac4a-59f4-4534-8274-dedc97e99039" config-ref="VM_Config" queueName="artistInfo.toPost">
+			<vm:content ><![CDATA[#[vars.artistObject]]]></vm:content>
+		</vm:publish-consume>
+    </flow>
+</mule>
